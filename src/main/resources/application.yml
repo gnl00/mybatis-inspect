@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    username: root
+    password: pg.ldzl
+    url: jdbc:postgresql://192.168.2.230:5432/ldzl_rt?characterEncoding=utf-8&useSSL=false
+
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.demo.entity
+  type-handlers-package: com.demo.handler
+  mapper-locations: classpath:/mapper/*.xml
+

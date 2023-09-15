@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.demo.mapper.TbTsMapper">
+
+    <insert id="insertWithArray">
+        insert into tb_ts(time, id, arr, arr_fl)
+        values(
+            #{timestamp},
+            #{id, jdbcType=INTEGER},
+            #{arr, jdbcType=INTEGER, typeHandler=com.demo.handler.ArrayTypeHandler},
+            #{arrFl, jdbcType=FLOAT, typeHandler=com.demo.handler.ArrayTypeHandler}
+        );
+    </insert>
+
+    <resultMap id="arrayResultMap" type="tbTs">
+        <id column="time" property="time" />
+        <result column="id" property="id" />
+        <result column="arr" property="arr" typeHandler="com.demo.handler.ArrayTypeHandler" />
+        <result column="arr_fl" property="arrFl" typeHandler="com.demo.handler.ArrayTypeHandler" />
+    </resultMap>
+
+    <select id="selectWithArray" resultType="list" resultMap="arrayResultMap">
+        select * from tb_ts;
+    </select>
+</mapper>
