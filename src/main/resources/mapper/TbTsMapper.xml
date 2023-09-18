@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.demo.mapper.TbTsMapper">
 
     <insert id="insertWithArray">
@@ -17,8 +17,8 @@
     <resultMap id="arrayResultMap" type="tbTs">
         <id column="time" property="time" />
         <result column="id" property="id" />
-        <result column="arr" property="arr" typeHandler="com.demo.handler.ArrayTypeHandler" />
-        <result column="arr_fl" property="arrFl" typeHandler="com.demo.handler.ArrayTypeHandler" />
+        <result column="arr" property="arr" jdbcType="INTEGER" typeHandler="com.demo.handler.ArrayTypeHandler" />
+        <result column="arr_fl" property="arrFl" jdbcType="FLOAT" typeHandler="com.demo.handler.ArrayTypeHandler" />
     </resultMap>
 
     <select id="selectWithArray" resultType="list" resultMap="arrayResultMap">

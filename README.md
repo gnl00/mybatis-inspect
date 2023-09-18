@@ -180,9 +180,9 @@ if (!ObjectUtils.isEmpty(this.typeHandlers)) {
 
 从调用栈不妨大胆猜测一番：
 
-1、执行器执行完 SQL 之后将返回值赋值给 PreparedStatementHandler 处理；
+1、执行器执使用 PreparedStatementHandler 处理需要调用的 SQL 语句；
 
-2、PreparedStatementHandler 调用 DefaultResultSetHandler 进一步处理返回值；
+2、PreparedStatementHandler 调用 DefaultResultSetHandler 处理返回值；
 
 3、DefaultResultSetHandler 如果发现 XML 方法设置了 ResultMap，则使用 ResultMap 来接收返回值；
 
@@ -190,9 +190,62 @@ if (!ObjectUtils.isEmpty(this.typeHandlers)) {
 
 接下来在调用栈的关键方法处打上断点查阅关键代码，印证猜想：
 
-* DefaultResultSetHandler 使用 `for` 循环处理每一个结果行的 TypeHandler；
+* SimpleExecutor 执行器使用 PreparedStatementHandler 处理需要调用的 SQL 语句；PreparedStatementHandler 调用 DefaultResultSetHandler 处理返回值。
 
+  ```java
+  // org.apache.ibatis.executor.statement.PreparedStatementHandler#query
+  public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
+      PreparedStatement ps = (PreparedStatement) statement;
+      ps.execute();
+      return resultSetHandler.handleResultSets(ps);
+  }
+  ```
 
+* DefaultResultSetHandler 如果发现 XML 方法设置了 ResultMap，则使用 ResultMap 来接收返回值
+
+  ```java
+  // org.apache.ibatis.executor.resultset.DefaultResultSetHandler#handleRowValues
+  if (resultMap.hasNestedResultMaps()) {
+      handleRowValuesForNestedResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);
+  } else {
+      handleRowValuesForSimpleResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);
+  }
+  ```
+
+* DefaultResultSetHandler 使用 `for` 循环处理每一个结果行中的每一列，获取对应的 TypeHandler 来处理返回值
+
+  ```java
+  // org.apache.ibatis.executor.resultset.DefaultResultSetHandler#applyPropertyMappings
+  // propertyMappings 表示一个结果行
+  // propertyMapping 表示结果行中的每一列
+  for (ResultMapping propertyMapping 表示结果列中的灭意= : propertyMappings) {
+      // ...
+      Object value = getPropertyMappingValue(rsw.getResultSet(), metaObject, propertyMapping, lazyLoader, columnPrefix);
+      // ...
+  }
+  ```
+
+  ```java
+  // org.apache.ibatis.executor.resultset.DefaultResultSetHandler#getPropertyMappingValue
+  final TypeHandler<?> typeHandler = propertyMapping.getTypeHandler(); // 获取到每一列的 TypeHandler
+  final String column = prependPrefix(propertyMapping.getColumn(), columnPrefix);
+  return typeHandler.getResult(rs, column); 
+  ```
+
+  ```java
+  // org.apache.ibatis.type.BaseTypeHandler#getResult
+  public T getResult(ResultSet rs, String columnName) throws SQLException 
+      // ...
+      return getNullableResult(rs, columnName); // 从这里就开始跳转到自定义 TypeHandler 中的方法了
+  	// ...
+  }
+  ```
+
+* …
+
+> Debug 到一半，发现 MyBatis 已经存在了定义好的 `org.apache.ibatis.type.ArrayTypeHandler` 和自定义的 ArrayTypeHandler 比较发现 MyBatis 实现的版本支持的数组类型更全，并且还考虑到了 `java.sql.Array` 对象使用后的资源释放。:+1:
+
+---
 
 > 提出问题：ArrayTypeHandler 是否可以做成 Plugin 形式？就不需要每次都在 XML 中手动设置。
 
