@@ -131,7 +131,7 @@ mybatis-plus:
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.demo.mapper.TbTsMapper">
 
     <insert id="insertWithArray">
@@ -248,6 +248,79 @@ if (!ObjectUtils.isEmpty(this.typeHandlers)) {
 ---
 
 > 提出问题：ArrayTypeHandler 是否可以做成 Plugin 形式？就不需要每次都在 XML 中手动设置。
+
+首先， 先了解一下 MyBatis 的[插件机制](https://mybatis.org/mybatis-3/zh/configuration.html#plugins)。再来分析：如果想要达到期望的效果，需要在  MyBatis 映射 Mapper XML 配置结果的时候做处理。
+
+很巧，映射的位置就在上文分析过的 `org.apache.ibatis.executor.resultset.DefaultResultSetHandler` 中：
+
+```java
+private Object getPropertyMappingValue(ResultSet rs, MetaObject metaResultObject, ResultMapping propertyMapping, ResultLoaderMap lazyLoader, String columnPrefix)
+    throws SQLException {
+    // ...
+    // 从 XML 映射中拿到配置的 TypeHandler
+    final TypeHandler<?> typeHandler = propertyMapping.getTypeHandler();
+    // 获取对应的列名
+    final String column = prependPrefix(propertyMapping.getColumn(), columnPrefix);
+    return typeHandler.getResult(rs, column); // 使用 TypeHandler 处理结果
+    // ...
+}
+```
+
+关键位置找到了。接下来就可以自定义插件实现期望的功能了，思路如下：
+
+0、自定义 `@TypeHandler` 注解
+
+1、拦截 `ResultSetHandler#handleResultSets` 方法
+
+```java
+public List<Object> handleResultSets(Statement stmt) throws SQLException {
+    // ...
+    handleResultSet(rsw, resultMap, multipleResults, null);
+    // ...
+}
+```
+
+2、根据  `resultMap` 获取到当前对应的 POJO 对象
+
+![image-20230918163704271](./assets/image-20230918163704271.png)
+
+3、判断当前 POJO 对象中的属性有无标注 `@TypeHandler`，如果有则将 `resultMap.ResultMappings[x].typeHandler` 设置为对应的 TypeHandler。
+
+![image-20230918163328932](./assets/image-20230918163328932.png)
+
+---
+
+
+
+
+
+## SpringBoot Intergrate
+
+SpringBoot 中根据配置初始化 MyBatis 的方法是：
+
+```java
+// org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration#sqlSessionFactory
+@Bean
+@ConditionalOnMissingBean
+public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {}
+```
+
+接着扫描 XML 配置的方法是：
+
+```java
+// org.mybatis.spring.SqlSessionFactoryBean#buildSqlSessionFactory
+protected SqlSessionFactory buildSqlSessionFactory() throws Exception {
+    if (hasLength(this.typeHandlersPackage)) {
+        scanClasses(this.typeHandlersPackage, TypeHandler.class)
+            .stream()
+            .filter(...)
+            // 注册自定义 TypeHandler
+            .forEach(targetConfiguration.getTypeHandlerRegistry()::register);
+    }
+}
+```
+
+
 
 
 
