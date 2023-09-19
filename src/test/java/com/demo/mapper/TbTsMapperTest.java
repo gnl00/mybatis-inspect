@@ -1,10 +1,12 @@
 package com.demo.mapper;
 
 import com.demo.entity.TbTs;
+import com.demo.utils.MyUtils;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
 
 import java.util.Date;
@@ -18,6 +20,17 @@ class TbTsMapperTest {
 
     @Autowired
     private SqlSessionFactory sqlSessionFactory;
+
+    @Autowired
+    private ApplicationContext ac;
+
+    @Autowired
+    private MyUtils myUtils;
+
+    @Test
+    void testU() {
+        myUtils.str();
+    }
 
     @Test
     void insertSqlSessionFactory() {

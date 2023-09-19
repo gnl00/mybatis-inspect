@@ -11,3 +11,6 @@ mybatis:
   type-handlers-package: com.demo.handler
   mapper-locations: classpath:/mapper/*.xml
 
+mb:
+  type-handler-pkg: com.demo.entity
+

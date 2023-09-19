@@ -1,7 +1,7 @@
 package com.demo.entity;
 
-import com.demo.handler.ArrayTypeHandler;
 import com.demo.anno.TypeHandler;
+import com.demo.handler.ArrayTypeHandler;
 import lombok.Data;
 
 import java.util.Date;

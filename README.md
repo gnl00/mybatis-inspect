@@ -290,6 +290,18 @@ public List<Object> handleResultSets(Statement stmt) throws SQLException {
 
 ---
 
+使用插件从 handleResultSets 入手设置 TypeHandler 失败，提示开始从 XML 构建的时候就找不到 TypeHandler。问题不大，逻辑是同的，换另一个切入点即可。
+
+---
+
+~~接下来使用 AOP，切面插入 `org.apache.ibatis.mapping.ResultMapping.Builder#resolveTypeHandler` 方法。~~
+
+炸裂，忘记了 Spring AOP 无法织入第三方类，只能织入 IOC 容器中的类。
+
+---
+
+
+
 
 
 

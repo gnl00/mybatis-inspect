@@ -1,6 +1,5 @@
 package com.demo.config;
 
-import com.demo.plugin.TypeHandlerPlugin;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +14,7 @@ public class MyBatisConfig {
 
     @PostConstruct
     public void init() {
-        sqlSessionFactory.getConfiguration().addInterceptor(new TypeHandlerPlugin());
+        // sqlSessionFactory.getConfiguration().addInterceptor(new TypeHandlerPlugin());
     }
 
 }
