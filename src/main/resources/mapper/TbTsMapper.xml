@@ -8,16 +8,16 @@
         insert into tb_ts(time, id, arr, arr_fl)
         values(
             #{timestamp},
-            #{id, jdbcType=INTEGER},
-            #{arr, jdbcType=INTEGER, typeHandler=com.demo.handler.ArrayTypeHandler},
-            #{arrFl, jdbcType=FLOAT, typeHandler=com.demo.handler.ArrayTypeHandler}
+            #{id},
+            #{arr},
+            #{arrFl}
         );
     </insert>
 
     <resultMap id="arrayResultMap" type="tbTs">
         <id column="time" property="time" />
         <result column="id" property="id" />
-        <result column="arr" property="arr" jdbcType="INTEGER" typeHandler="com.demo.handler.ArrayTypeHandler" />
+        <result column="arr" property="arr" jdbcType="INTEGER" />
         <result column="arr_fl" property="arrFl" jdbcType="FLOAT" />
     </resultMap>
 

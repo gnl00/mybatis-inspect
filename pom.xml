@@ -73,7 +73,7 @@
             </plugin>
             <plugin>
                 <!--
-                org.codehaus.mojo 不在支持 JDK 16 之后的版本，使用 dev.aspectj
+                org.codehaus.mojo 不再支持 JDK 16 之后的版本，使用 dev.aspectj
                 https://github.com/mojohaus/aspectj-maven-plugin/issues/113
                 https://github.com/mojohaus/aspectj-maven-plugin/issues/154
                 https://github.com/dev-aspectj/aspectj-maven-plugin/tree/main

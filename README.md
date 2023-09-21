@@ -359,7 +359,23 @@ public ResultMapping buildResultMapping(
 
 > 两个方法的具体实现逻辑都在 `MyBatisAspect` 类中。
 
+---
 
+> **后话**
+>
+> 使用 buildResultMapping 方法有一个缺点，那就是在设置 TypeHandler 值的时候需要按照它在方法参数中的位置。如果 MyBatis 官方代码有修改，那么切面方法中的参数位置也需要进行相依的修改。
+>
+> ```java
+> // set typeHandler value
+> if (Objects.isNull(args[9])) {
+>     System.out.println("set typeHandler");
+>     args[9] = targetAnno.value();
+> }
+> ```
+>
+> 虽然 getChildren 方法需要配合 resultMapElement 使用，但是不需要写死 TypeHandler 的位置。综合考虑采用这个方法比较合适。
+
+> 测试发现，TypeHandler 只需要在查询的场景下设置，插入的场景下就算没有 Type Handler 也不影响。
 
 
 

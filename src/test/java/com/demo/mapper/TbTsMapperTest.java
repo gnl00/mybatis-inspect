@@ -28,7 +28,7 @@ class TbTsMapperTest {
 
     @Test
     void insertWithArray() {
-        mapper.insertWithArray(new Date(), 1005, new Integer[]{1, 2, 3, 4}, new Float[]{1f, 2f, 3f, 4f});
+        mapper.insertWithArray(new Date(), 1007, new Integer[]{1, 2, 3, 4}, new Float[]{1f, 2f, 3f, 4f});
     }
 
     @Test

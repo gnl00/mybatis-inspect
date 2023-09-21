@@ -2,24 +2,19 @@ package com.demo.aspect;
 
 import com.demo.anno.TypeHandler;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
-import org.apache.ibatis.mapping.ResultFlag;
 import org.apache.ibatis.parsing.XNode;
-import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeAliasRegistry;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +27,9 @@ public class MyBatisAspect {
     private static final String TYPE_HANDLER_COLUMN = "typeHandler";
 
     private String typeHandlerPkg = "com.demo.entity";
+
+    @Value("${mb.type-handler-pkg}")
+    private String injectedTypeHandlerPkg;
 
     private TypeAliasRegistry typeAliasRegistry;
     private Class<?> currentClass;
@@ -119,6 +117,7 @@ public class MyBatisAspect {
     @Around("buildResultMapping()")
     public Object buildResultMapping_around(ProceedingJoinPoint pjp) {
         System.out.println("buildResultMapping ##> around");
+        System.out.println(" typeHandler from yaml ##> " + injectedTypeHandlerPkg);
 
         try {
             Object[] args = pjp.getArgs();
@@ -149,8 +148,10 @@ public class MyBatisAspect {
             System.out.println("got target annotation from java field ##> " + targetAnno);
 
             // set typeHandler value
-            System.out.println("set typeHandler");
-            if (Objects.isNull(args[9])) args[9] = targetAnno.value();
+            if (Objects.isNull(args[9])) {
+                System.out.println("set typeHandler");
+                args[9] = targetAnno.value();
+            }
             System.out.println("post process args ##> " + Arrays.stream(args).toList());
             return pjp.proceed(args);
         } catch (NoSuchFieldException e) {
