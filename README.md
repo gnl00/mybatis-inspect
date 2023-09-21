@@ -377,7 +377,55 @@ public ResultMapping buildResultMapping(
 
 > 测试发现，TypeHandler 只需要在查询的场景下设置，插入的场景下就算没有 Type Handler 也不影响。
 
+---
 
+[MyBatis Plus](https://github.com/baomidou/mybatis-plus-samples/tree/master/mybatis-plus-sample-typehandler) 中的 @TableField 注解也有一个字段 `typeHandler`，
+
+```java
+@TableField(typeHandler = WalletListTypeHandler.class)
+private List<Wallet> wallets;
+```
+
+@TableField 注解以*拼接*的方式来实现 TypeHandler 的添加。
+
+具体可以看 `com.baomidou.mybatisplus.core.metadata.TableFieldInfo#TableFieldInfo` 方法：
+
+```java
+if (UnknownTypeHandler.class != typeHandler) {
+    this.typeHandler = (Class<? extends TypeHandler<?>>) typeHandler;
+    if (tableField.javaType()) {
+        String javaType = null;
+        TypeAliasRegistry registry = tableInfo.getConfiguration().getTypeAliasRegistry();
+        Map<String, Class<?>> typeAliases = registry.getTypeAliases();
+        for (Map.Entry<String, Class<?>> entry : typeAliases.entrySet()) {
+            if (entry.getValue().equals(propertyType)) {
+                javaType = entry.getKey();
+                break;
+            }
+        }
+        if (javaType == null) {
+            javaType = propertyType.getName();
+            registry.registerAlias(javaType, propertyType);
+        }
+        el += (COMMA + "javaType=" + javaType);
+    }
+    el += (COMMA + SqlScriptUtils.mappingTypeHandler(this.typeHandler));
+}
+```
+
+```java
+// 添加 TypeHandler
+public static String mappingTypeHandler(Class<? extends TypeHandler<?>> typeHandler) {
+    if (typeHandler != null) {
+        return "typeHandler=" + typeHandler.getName();
+    }
+    return null;
+}
+```
+
+…
+
+---
 
 ## SpringBoot Intergrate
 
