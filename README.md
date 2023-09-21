@@ -16,11 +16,11 @@ create table (
 );
 ```
 
-但是 MyBatis 没有做相关的数据映射，导致在数据库中设置为数组类型的列返回值都是 `null`。因此就需要自定义 `TypeHandler` 来应对这种情况。
+但是 MyBatis 没有做相关的数据映射，导致查询场景下数据库中设置为数组类型的列返回值都是 `null`。因此就需要自定义 `TypeHandler` 来应对这种情况。
 
 ---
 
-MyBatis 在设置预处理语句（PreparedStatement）中的参数，或从结果集（ResultSet）中取出一个值时， 都会用类型处理器将获取到的值以合适的方式转换成 Java 类型。可以参考 `BooleanTypeHandler` 来理解：
+MyBatis 在设置预处理语句（PreparedStatement）中参数的值，或从结果集（ResultSet）中取出一个值时， 都会用类型处理器将获取到的值以合适的方式转换成 Java 类型。可以参考 `BooleanTypeHandler` 来理解：
 
 ```java
 public class BooleanTypeHandler extends BaseTypeHandler<Boolean> {

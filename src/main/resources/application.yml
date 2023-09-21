@@ -1,8 +1,8 @@
 spring:
   datasource:
     username: root
-    password: pg.ldzl
-    url: jdbc:postgresql://192.168.2.230:5432/ldzl_rt?characterEncoding=utf-8&useSSL=false
+    password: 123456
+    url: jdbc:postgresql://127.0.0.1:5432/db_test?characterEncoding=utf-8&useSSL=false
 
 mybatis:
   configuration:
