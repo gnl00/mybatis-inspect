@@ -367,7 +367,7 @@ public ResultMapping buildResultMapping(
 >
 > ```java
 > // set typeHandler value
-> if (Objects.isNull(args[9])) {
+> if (Objects.isNull(args[9])) { // 写死了 TypeHandler 参数的位置
 >     System.out.println("set typeHandler");
 >     args[9] = targetAnno.value();
 > }

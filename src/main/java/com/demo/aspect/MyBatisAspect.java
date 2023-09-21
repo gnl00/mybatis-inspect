@@ -10,9 +10,12 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.env.PropertiesPropertySourceLoader;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.core.env.PropertySource;
+import org.springframework.core.io.ClassPathResource;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -21,18 +24,59 @@ import java.util.Objects;
 import java.util.Properties;
 
 @Aspect
-@Component
 public class MyBatisAspect {
 
+    private static final String CONFIG_NAME = "application";
+    private static final String YML_CONFIG_FILE = CONFIG_NAME + ".yml";
+    private static final String YAML_CONFIG_FILE = CONFIG_NAME + ".yaml";
+    private static final String PROPERTIES_CONFIG_FILE = CONFIG_NAME + ".properties";
+    private static final String TYPE_HANDLER_PACKAGE_PROPERTY_NAME = "mb.type-handler-pkg";
     private static final String TYPE_HANDLER_COLUMN = "typeHandler";
-
-    private String typeHandlerPkg = "com.demo.entity";
-
-    @Value("${mb.type-handler-pkg}")
-    private String injectedTypeHandlerPkg;
-
+    private static String typeHandlerPkg;
     private TypeAliasRegistry typeAliasRegistry;
     private Class<?> currentClass;
+
+    static {
+        // 在编译的时候切面已经被织入，所以无法再从 yaml 中获取到对应的配置
+        // 手动处理配置文件，找到对应的 key
+        handleConfig();
+
+    }
+
+    private static List<PropertySource<?>> buildPropertySources() throws IOException {
+        ClassPathResource propertiesResource = new ClassPathResource(PROPERTIES_CONFIG_FILE);
+        if (propertiesResource.exists()) {
+            PropertiesPropertySourceLoader propertiesLoader = new PropertiesPropertySourceLoader();
+            return propertiesLoader.load(CONFIG_NAME, propertiesResource);
+        }
+
+        ClassPathResource ymlResource = new ClassPathResource(YML_CONFIG_FILE);
+        YamlPropertySourceLoader yamlLoader = new YamlPropertySourceLoader();
+
+        if (ymlResource.exists()) {
+            return yamlLoader.load(CONFIG_NAME, ymlResource);
+        }
+
+        ClassPathResource yamlResource = new ClassPathResource(YAML_CONFIG_FILE);
+        if (yamlResource.exists()) {
+            return yamlLoader.load(CONFIG_NAME, ymlResource);
+        }
+
+        return null;
+    }
+
+    private static void handleConfig() {
+        try {
+            List<PropertySource<?>> propertySourceList = buildPropertySources();
+            for (PropertySource<?> ps : propertySourceList) {
+                if (ps.containsProperty(TYPE_HANDLER_PACKAGE_PROPERTY_NAME)) {
+                    typeHandlerPkg = (String) ps.getProperty(TYPE_HANDLER_PACKAGE_PROPERTY_NAME);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("build PropertySource from configuration file failed " + e.getMessage());
+        }
+    }
 
     @Pointcut("execution(* org.mybatis.spring.SqlSessionFactoryBean.buildSqlSessionFactory(..))")
     public void buildSqlSessionFactory() {}
@@ -117,8 +161,7 @@ public class MyBatisAspect {
     @Around("buildResultMapping()")
     public Object buildResultMapping_around(ProceedingJoinPoint pjp) {
         System.out.println("buildResultMapping ##> around");
-        System.out.println(" typeHandler from yaml ##> " + injectedTypeHandlerPkg);
-
+        System.out.println("type handler package ##> " + typeHandlerPkg);
         try {
             Object[] args = pjp.getArgs();
             System.out.println("pre process args ##> " + Arrays.stream(args).toList());
