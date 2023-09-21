@@ -1,15 +1,10 @@
 package com.demo;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
-
-@MapperScan("com.demo.mapper")
-@SpringBootApplication
+import com.demo.service.UserService;
 
 public class Main {
     public static void main(String[] args) {
-        ConfigurableApplicationContext ac = SpringApplication.run(Main.class, args);
+        UserService user = new UserService();
+        user.pay(1, 100, "2023-09-22");
     }
 }

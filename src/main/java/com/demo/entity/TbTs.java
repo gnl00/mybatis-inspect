@@ -29,5 +29,6 @@ public class TbTs {
      java float[] 对应 postgresql float4[]
      java double[] 对应 postgresql float8[]
      */
+    @TypeHandler(ArrayTypeHandler.class)
     Float[] arrFl;
 }

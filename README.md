@@ -300,7 +300,64 @@ public List<Object> handleResultSets(Statement stmt) throws SQLException {
 
 ---
 
+> 关键词：*Post Compile Weaving*。 参考仓库中的 `java-aspectj` 项目。
 
+重点在 `org.apache.ibatis.builder.MapperBuilderAssistant#buildResultMapping(..)`，只要构建 ResultMap 的时候能拿到全限定类名和当前的列名，就可以利用反射来设置 TypeHandler。
+
+```java
+public ResultMapping buildResultMapping(
+    Class<?> resultType, // 可以根据 resultType 获取到全限定类名
+    String property, // 属性
+    String column, // 列名
+    Class<?> javaType,
+    JdbcType jdbcType,
+    String nestedSelect,
+    String nestedResultMap,
+    String notNullColumn,
+    String columnPrefix,
+    Class<? extends TypeHandler<?>> typeHandler,
+    List<ResultFlag> flags,
+    String resultSet,
+    String foreignColumn,
+    boolean lazy) {
+    Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
+    // 获取当前 TypeHandler
+    TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
+    List<ResultMapping> composites;
+    if ((nestedSelect == null || nestedSelect.isEmpty()) && (foreignColumn == null || foreignColumn.isEmpty())) {
+        composites = Collections.emptyList();
+    } else {
+        composites = parseCompositeColumnName(column);
+    }
+    return new ResultMapping.Builder(configuration, property, column, javaTypeClass)
+        .jdbcType(jdbcType)
+        .nestedQueryId(applyCurrentNamespace(nestedSelect, true))
+        .nestedResultMapId(applyCurrentNamespace(nestedResultMap, true))
+        .resultSet(resultSet)
+        .typeHandler(typeHandlerInstance)
+        .flags(flags == null ? new ArrayList<>() : flags)
+        .composites(composites)
+        .notNullColumns(parseMultipleColumnNames(notNullColumn))
+        .columnPrefix(columnPrefix)
+        .foreignColumn(foreignColumn)
+        .lazy(lazy)
+        .build();
+}
+```
+
+织入 buildResultMapping 执行前，修改 typeHandler 参数。
+
+---
+
+可恶！设置未生效。问题不大，再换个地方搞事情。
+
+`org.apache.ibatis.parsing.XNode.getChildren` 调用时机比 buildResultMapping 早，返回所有的 ResultMap 节点，可以借助它来加上我们需要的 TypeHandler。但仅凭 getChildren无法获取到需要的所有信息，还需要 `org.apache.ibatis.builder.xml.XMLMapperBuilder.resultMapElement` 用以缓存当前处理的 Class。
+
+---
+
+两个办法都完成了，都可以达到目的。之前未生效是因为自定义的 @TypeHandler 注解随手设置的的留存策略的值是 `RetentionPolicy.SOURCE`，即只保留在源码阶段，编译后就不存在了，更不用说使用反射来获取。更改成 `RetentionPolicy.RUNTIME` 表现正常。
+
+> 两个方法的具体实现逻辑都在 `MyBatisAspect` 类中。
 
 
 

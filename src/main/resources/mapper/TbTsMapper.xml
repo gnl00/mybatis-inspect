@@ -18,7 +18,7 @@
         <id column="time" property="time" />
         <result column="id" property="id" />
         <result column="arr" property="arr" jdbcType="INTEGER" typeHandler="com.demo.handler.ArrayTypeHandler" />
-        <result column="arr_fl" property="arrFl" jdbcType="FLOAT" typeHandler="com.demo.handler.ArrayTypeHandler" />
+        <result column="arr_fl" property="arrFl" jdbcType="FLOAT" />
     </resultMap>
 
     <select id="selectWithArray" resultType="list" resultMap="arrayResultMap">
