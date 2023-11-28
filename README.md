@@ -20,7 +20,7 @@ create table (
 
 ---
 
-MyBatis 在设置预处理语句（PreparedStatement）中参数的值，或从结果集（ResultSet）中取出一个值时， 都会用类型处理器将获取到的值以合适的方式转换成 Java 类型。可以参考 `BooleanTypeHandler` 来理解：
+MyBatis 在设置预处理语句（PreparedStatement）参数的值，或从结果集（ResultSet）中取出一个值时，都会用类型处理器。类型处理器将获取到的值以合适的方式转换成 Java 类型。可以参考 `BooleanTypeHandler` 来理解：
 
 ```java
 public class BooleanTypeHandler extends BaseTypeHandler<Boolean> {
@@ -55,7 +55,7 @@ public class BooleanTypeHandler extends BaseTypeHandler<Boolean> {
 | `BigDecimalTypeHandler` | `java.math.BigDecimal`         | 数据库兼容的 `NUMERIC` 或 `DECIMAL`  |
 | `StringTypeHandler`     | `java.lang.String`             | `CHAR`, `VARCHAR`                    |
 
-可以重写已有的类型处理器或创建你自己的类型处理器来处理不支持的或非标准的类型。 具体做法为：
+可以重写已有的类型处理器，或创建你自己的类型处理器，来处理不支持的或非标准的类型。 具体做法为：
 
 * 实现 `org.apache.ibatis.type.TypeHandler` 接口；
 * 或继承 `org.apache.ibatis.type.BaseTypeHandler`， 并且可以（可选地）将它映射到一个 JDBC 类型。
@@ -245,11 +245,15 @@ if (!ObjectUtils.isEmpty(this.typeHandlers)) {
 
 > Debug 到一半，发现 MyBatis 已经存在了定义好的 `org.apache.ibatis.type.ArrayTypeHandler` 和自定义的 ArrayTypeHandler 比较发现 MyBatis 实现的版本支持的数组类型更全，并且还考虑到了 `java.sql.Array` 对象使用后的资源释放。:+1:
 
+...
+
 ---
 
-> 提出问题：ArrayTypeHandler 是否可以做成 Plugin 形式？就不需要每次都在 XML 中手动设置。
+> **提出问题**：ArrayTypeHandler 是否可以做成 Plugin 形式？就不需要每次都在 XML 中手动设置。
 
-首先， 先了解一下 MyBatis 的[插件机制](https://mybatis.org/mybatis-3/zh/configuration.html#plugins)。再来分析：如果想要达到期望的效果，需要在  MyBatis 映射 Mapper XML 配置结果的时候做处理。
+首先， 先了解一下 MyBatis 的[插件机制](https://mybatis.org/mybatis-3/zh/configuration.html#plugins)。
+
+再来分析：如果想要达到期望的效果，需要在  MyBatis 映射 Mapper XML 配置结果的时候做处理。
 
 很巧，映射的位置就在上文分析过的 `org.apache.ibatis.executor.resultset.DefaultResultSetHandler` 中：
 
@@ -300,7 +304,7 @@ public List<Object> handleResultSets(Statement stmt) throws SQLException {
 
 ---
 
-> 关键词：*Post Compile Weaving*。 参考仓库中的 `java-aspectj` 项目。
+> 关键词：*Post Compile Weaving*。 参考仓库中的 [java-aspectj](https://github.com/gnl00/java-aspectj) 项目。
 
 重点在 `org.apache.ibatis.builder.MapperBuilderAssistant#buildResultMapping(..)`，只要构建 ResultMap 的时候能拿到全限定类名和当前的列名，就可以利用反射来设置 TypeHandler。
 
@@ -375,7 +379,7 @@ public ResultMapping buildResultMapping(
 >
 > 虽然 getChildren 方法需要配合 resultMapElement 使用，但是不需要写死 TypeHandler 的位置。综合考虑采用这个方法比较合适。
 
-> 测试发现，TypeHandler 只需要在查询的场景下设置，插入的场景下就算没有 Type Handler 也不影响。
+> 测试发现，TypeHandler 只需要在查询的场景下设置，插入的场景下就算没有 TypeHandler 也不影响。
 
 ---
 
